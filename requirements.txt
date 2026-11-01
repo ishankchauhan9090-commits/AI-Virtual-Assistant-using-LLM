@@ -6,3 +6,9 @@ langchain-community
 faiss-cpu
 sentence-transformers
 pypdf
+fastapi
+uvicorn
+flask
+requests
+python-multipart
+redis

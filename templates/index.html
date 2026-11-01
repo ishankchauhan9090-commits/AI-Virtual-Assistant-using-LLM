@@ -1,0 +1,2509 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Nova AI — Virtual Assistant</title>
+
+
+    <!-- Google Font -->
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <!-- Main CSS -->
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     APP
+     ===================================================== -->
+
+<div class="app">
+
+
+    <!-- =================================================
+         SIDEBAR
+         ================================================= -->
+
+    <aside class="sidebar">
+
+
+        <!-- BRAND -->
+
+        <div class="brand">
+
+
+            <div class="brand-logo">
+
+                <div class="nova-symbol">
+
+                    <span></span>
+                    <span></span>
+                    <span></span>
+
+                </div>
+
+            </div>
+
+
+            <div class="brand-text">
+
+                <div class="brand-name">
+                    Nova AI
+                </div>
+
+                <div class="brand-subtitle">
+                    Virtual Assistant
+                </div>
+
+            </div>
+
+
+            <!-- MOBILE CLOSE -->
+
+            <button
+                type="button"
+                class="mobile-close"
+                aria-label="Close sidebar"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+
+        <!-- =================================================
+             NEW CHAT
+             ================================================= -->
+
+        <form
+            action="{{ url_for('new_chat') }}"
+            method="POST"
+            class="new-chat-form"
+        >
+
+            <!-- Hidden title because backend requires it -->
+
+            <input
+                type="hidden"
+                name="title"
+                value="New Conversation"
+            >
+
+
+            <button
+                type="submit"
+            >
+
+                <span class="new-chat-icon">
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                    >
+
+                        <path d="M12 5v14"></path>
+
+                        <path d="M5 12h14"></path>
+
+                    </svg>
+
+                </span>
+
+
+                <span>
+                    New Chat
+                </span>
+
+            </button>
+
+        </form>
+
+
+
+        <!-- =================================================
+             CONVERSATIONS
+             ================================================= -->
+
+        <div class="conversation-section">
+
+
+            <div class="section-title">
+                Conversations
+            </div>
+
+
+            <div class="conversation-list">
+
+
+                {% if conversations %}
+
+
+                    {% for conversation in conversations %}
+
+
+                        <div class="conversation-entry">
+                        <a
+                            href="{{ url_for('select_conversation', conversation_id=conversation.conversation_id) }}"
+                            class="conversation-item {% if conversation.conversation_id == conversation_id %}active{% endif %}"
+                        >
+
+
+                            <div class="conversation-icon">
+
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.7"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+
+                                    <path
+                                        d="M5 5h14v11H8l-3 3V5z"
+                                    ></path>
+
+                                </svg>
+
+                            </div>
+
+
+                            <div class="conversation-details">
+
+
+                                <div class="conversation-title">
+
+                                    {{ conversation.title or "Conversation" }}
+
+                                </div>
+
+
+                                <div class="conversation-date">
+
+                                    {{ conversation.created_at or "" }}
+
+                                </div>
+
+
+                            </div>
+
+
+                        </a>
+
+                        <button
+                            type="button"
+                            class="delete-conversation-button"
+                            data-conversation-id="{{ conversation.conversation_id }}"
+                            data-conversation-title="{{ conversation.title or 'Conversation' }}"
+                            aria-label="Delete conversation {{ conversation.title or 'Conversation' }}"
+                            title="Delete conversation"
+                        >×</button>
+                        </div>
+
+
+                    {% endfor %}
+
+
+                {% else %}
+
+
+                    <div class="empty-conversations">
+
+
+                        <div class="empty-icon">
+
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.6"
+                            >
+
+                                <path
+                                    d="M5 5h14v11H8l-3 3V5z"
+                                ></path>
+
+                            </svg>
+
+                        </div>
+
+
+                        <p>
+                            No conversations yet.
+                        </p>
+
+
+                    </div>
+
+
+                {% endif %}
+
+
+            </div>
+
+        </div>
+
+
+
+        <section class="document-panel" aria-label="Uploaded PDFs">
+            <button
+                type="button"
+                id="documentToggle"
+                class="task-plan-toggle"
+                aria-expanded="false"
+                aria-controls="documentList"
+            >
+                <span>My PDFs</span>
+                <span id="documentCount" class="task-plan-count">0</span>
+            </button>
+            <div id="documentList" class="document-list" hidden>
+                <p class="task-plan-empty">Uploaded PDFs will appear here.</p>
+            </div>
+        </section>
+
+
+        <section class="task-plan-panel" aria-label="Saved document action plans">
+            <button
+                type="button"
+                id="taskPlanToggle"
+                class="task-plan-toggle"
+                aria-expanded="false"
+                aria-controls="taskPlanList"
+            >
+                <span>Saved action plans</span>
+                <span id="taskPlanCount" class="task-plan-count">0</span>
+            </button>
+            <div id="taskPlanList" class="task-plan-list" hidden>
+                <p class="task-plan-empty">Your document action plans will appear here.</p>
+            </div>
+        </section>
+
+
+        <!-- =================================================
+             SIDEBAR FOOTER
+             ================================================= -->
+
+        <div class="sidebar-footer">
+
+
+            <div class="status-row">
+
+                <span class="status-dot {% if not backend_online %}offline{% endif %}"></span>
+
+                <span>
+                    {% if backend_online %}AI Assistant Online{% else %}FastAPI Offline{% endif %}
+                </span>
+
+            </div>
+
+
+            <div class="version">
+                Gemini · RAG · FastAPI
+            </div>
+
+
+        </div>
+
+
+    </aside>
+
+
+
+    <!-- =================================================
+         MAIN
+         ================================================= -->
+
+    <main class="main">
+
+
+        <!-- =================================================
+             TOPBAR
+             ================================================= -->
+
+        <header class="topbar">
+
+
+            <div class="topbar-left">
+
+
+                <!-- MOBILE MENU -->
+
+                <button
+                    type="button"
+                    class="topbar-icon mobile-menu"
+                    aria-label="Open sidebar"
+                >
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                    >
+
+                        <path d="M4 6h16"></path>
+                        <path d="M4 12h16"></path>
+                        <path d="M4 18h16"></path>
+
+                    </svg>
+
+                </button>
+
+
+                <div>
+
+
+                    <div class="topbar-heading">
+                        Nova AI
+                    </div>
+
+
+                    <div class="topbar-subheading">
+                        Your intelligent virtual assistant
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- ONLINE -->
+
+            <div class="online-badge {% if not backend_online %}offline{% endif %}">
+
+                <span class="online-dot {% if not backend_online %}offline{% endif %}"></span>
+
+                <span>
+                    {% if backend_online %}Online{% else %}Offline{% endif %}
+                </span>
+
+            </div>
+
+
+        </header>
+
+
+
+        <!-- =================================================
+             CHAT AREA
+             ================================================= -->
+
+        <section
+            class="chat-area"
+            id="chatArea"
+        >
+
+            {% if error %}
+                <div class="error-card" role="alert">
+                    <div class="error-icon">!</div>
+                    <div>
+                        <strong>Backend unavailable</strong>
+                        <p>{{ error }}</p>
+                    </div>
+                </div>
+            {% endif %}
+
+
+            <!-- =================================================
+                 MESSAGES WRAPPER
+
+                 IMPORTANT:
+                 This ALWAYS exists, even in a new chat.
+                 ================================================= -->
+
+            <div
+                class="messages-wrapper"
+                id="messagesContainer"
+            >
+
+
+                <!-- =================================================
+                     WELCOME SCREEN
+                     ================================================= -->
+
+                {% if not messages %}
+
+
+                    <div
+                        class="welcome-screen"
+                        id="welcomeScreen"
+                    >
+
+
+                        <!-- AI ORB -->
+
+                        <div class="hero-visual">
+
+
+                            <div class="ai-orb">
+
+
+                                <div class="orb-ring ring-one"></div>
+
+                                <div class="orb-ring ring-two"></div>
+
+                                <div class="orb-ring ring-three"></div>
+
+
+                                <div class="orb-core">
+
+                                    <div class="orb-dot"></div>
+
+                                </div>
+
+
+                            </div>
+
+
+                        </div>
+
+
+
+                        <!-- BADGE -->
+
+                        <div class="welcome-badge">
+
+
+                            <span class="welcome-dot"></span>
+
+
+                            Nova AI Assistant
+
+
+                        </div>
+
+
+
+                        <!-- TITLE -->
+
+                        <h1>
+                            How can I help you today?
+                        </h1>
+
+
+
+                        <!-- DESCRIPTION -->
+
+                        <p class="welcome-description">
+
+                            Compare PDFs, get answers with page citations,
+                            and turn document steps into saved action plans.
+
+                        </p>
+
+
+
+                        <!-- =================================================
+                             SUGGESTIONS
+                             ================================================= -->
+
+                        <div class="suggestions">
+
+
+                            <!-- CLOUD -->
+
+                            <button
+                                type="button"
+                                class="suggestion"
+                                data-message="What are the three cloud service models?"
+                            >
+
+
+                                <div class="suggestion-icon">
+
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.8"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+
+                                        <path
+                                            d="M7 18h10a4 4 0 0 0 .6-7.96A6 6 0 0 0 6 9a4.5 4.5 0 0 0 1 9z"
+                                        ></path>
+
+                                    </svg>
+
+                                </div>
+
+
+                                <div>
+
+                                    <strong>
+                                        Ask about Cloud
+                                    </strong>
+
+                                    <span>
+                                        Learn about cloud computing
+                                    </span>
+
+                                </div>
+
+
+                            </button>
+
+
+
+                            <!-- AI -->
+
+                            <button
+                                type="button"
+                                class="suggestion"
+                                data-message="What is artificial intelligence?"
+                            >
+
+
+                                <div class="suggestion-icon">
+
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.8"
+                                        stroke-linecap="round"
+                                    >
+
+                                        <path
+                                            d="M12 3v18"
+                                        ></path>
+
+                                        <path
+                                            d="M3 12h18"
+                                        ></path>
+
+                                        <path
+                                            d="M5.5 5.5l13 13"
+                                        ></path>
+
+                                        <path
+                                            d="M18.5 5.5l-13 13"
+                                        ></path>
+
+                                    </svg>
+
+                                </div>
+
+
+                                <div>
+
+                                    <strong>
+                                        Learn about AI
+                                    </strong>
+
+                                    <span>
+                                        Understand artificial intelligence
+                                    </span>
+
+                                </div>
+
+
+                            </button>
+
+
+
+                            <!-- DATA -->
+
+                            <button
+                                type="button"
+                                class="suggestion"
+                                data-message="Create an action plan from my PDFs. Include only supported steps and cite each source page."
+                            >
+
+
+                                <div class="suggestion-icon">
+
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.8"
+                                        stroke-linecap="round"
+                                    >
+
+                                        <path d="M5 19V9"></path>
+
+                                        <path d="M12 19V5"></path>
+
+                                        <path d="M19 19v-7"></path>
+
+                                    </svg>
+
+                                </div>
+
+
+                                <div>
+
+                                    <strong>
+                                        Create an action plan
+                                    </strong>
+
+                                    <span>
+                                        Turn PDF steps into cited tasks
+                                    </span>
+
+                                </div>
+
+
+                            </button>
+
+
+
+                            <!-- CALCULATOR -->
+
+                            <button
+                                type="button"
+                                class="suggestion"
+                                data-message="calculate 25 * 4 + 10"
+                            >
+
+
+                                <div class="suggestion-icon">
+
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.8"
+                                        stroke-linecap="round"
+                                    >
+
+                                        <path
+                                            d="M7 3h10v18H7z"
+                                        ></path>
+
+                                        <path d="M9 7h6"></path>
+
+                                        <path d="M9 11h.01"></path>
+
+                                        <path d="M12 11h.01"></path>
+
+                                        <path d="M15 11h.01"></path>
+
+                                        <path d="M9 15h.01"></path>
+
+                                        <path d="M12 15h.01"></path>
+
+                                        <path d="M15 15h.01"></path>
+
+                                    </svg>
+
+                                </div>
+
+
+                                <div>
+
+                                    <strong>
+                                        Calculate
+                                    </strong>
+
+                                    <span>
+                                        Try the calculator tool
+                                    </span>
+
+                                </div>
+
+
+                            </button>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                {% else %}
+
+
+                    <!-- =================================================
+                         EXISTING MESSAGES
+                         ================================================= -->
+
+
+                    {% for message in messages %}
+
+
+                        {% if message.role == "user" %}
+
+
+                            <div class="message-row user-row">
+
+
+                                <div class="message-content">
+
+
+                                    <div class="message-meta">
+
+
+                                        <span class="message-name">
+                                            You
+                                        </span>
+
+
+                                        <span class="message-time">
+                                            {{ message.timestamp or "" }}
+                                        </span>
+
+
+                                    </div>
+
+
+                                    <div class="message-bubble user-bubble">
+
+                                        {{ message.message }}
+
+                                    </div>
+
+
+                                </div>
+
+
+                                <div class="user-avatar">
+
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.7"
+                                    >
+
+                                        <circle
+                                            cx="12"
+                                            cy="8"
+                                            r="3"
+                                        ></circle>
+
+                                        <path
+                                            d="M5 20a7 7 0 0 1 14 0"
+                                        ></path>
+
+                                    </svg>
+
+                                </div>
+
+
+                            </div>
+
+
+                        {% else %}
+
+
+                            <div class="message-row assistant-row">
+
+
+                                <div class="assistant-avatar">
+
+
+                                    <div class="mini-nova">
+
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+
+                                    </div>
+
+
+                                </div>
+
+
+                                <div class="message-content">
+
+
+                                    <div class="message-meta">
+
+
+                                        <span class="message-name">
+                                            Nova AI
+                                        </span>
+
+
+                                        <span class="message-time">
+                                            {{ message.timestamp or "" }}
+                                        </span>
+
+
+                                    </div>
+
+
+                                    <div class="message-bubble assistant-bubble">
+
+
+                                        <div class="markdown-content">
+
+                                            {{ message.message }}
+
+                                        </div>
+
+
+                                        <button
+                                            class="copy-message"
+                                            type="button"
+                                            onclick="copyMessage(this)"
+                                        >
+                                            Copy
+                                        </button>
+
+
+                                    </div>
+
+
+                                </div>
+
+
+                            </div>
+
+
+                        {% endif %}
+
+
+                    {% endfor %}
+
+
+                {% endif %}
+
+
+
+                <!-- =================================================
+                     TYPING INDICATOR
+
+                     IMPORTANT:
+                     Outside the if/else so it exists in NEW CHAT.
+                     ================================================= -->
+
+                <div
+                    class="message-row assistant-row typing-row"
+                    id="typingIndicator"
+                    style="display:none;"
+                >
+
+
+                    <div class="assistant-avatar">
+
+
+                        <div class="mini-nova">
+
+                            <span></span>
+                            <span></span>
+                            <span></span>
+
+                        </div>
+
+
+                    </div>
+
+
+                    <div class="message-content">
+
+
+                        <div class="message-meta">
+
+
+                            <span class="message-name">
+                                Nova AI
+                            </span>
+
+
+                            <span class="thinking-text">
+                                thinking
+                            </span>
+
+
+                        </div>
+
+
+                        <div class="typing-bubble">
+
+
+                            <span class="typing-label">
+                                Nova AI is thinking
+                            </span>
+
+
+                            <span class="typing-dots">
+
+                                <span></span>
+                                <span></span>
+                                <span></span>
+
+                            </span>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- =================================================
+                 INPUT SECTION
+                 ================================================= -->
+
+            <div class="input-section">
+
+
+                <form
+                    id="chatForm"
+                    class="chat-form"
+                    autocomplete="off"
+                >
+
+
+                    <div class="input-wrapper">
+
+
+                        <!-- ATTACHMENT -->
+
+                        <button
+                            type="button"
+                            class="attachment-button"
+                            title="Upload up to 5 PDFs"
+                            aria-label="Upload up to 5 PDFs"
+                        >
+
+
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                            >
+
+                                <path
+                                    d="M12 5v14"
+                                ></path>
+
+                                <path
+                                    d="M5 12h14"
+                                ></path>
+
+                            </svg>
+
+
+                        </button>
+
+                        <input
+                            id="documentInput"
+                            type="file"
+                            accept=".pdf,application/pdf"
+                            multiple
+                            hidden
+                        >
+
+
+
+                        <!-- TEXTAREA -->
+
+                        <textarea
+                            id="messageInput"
+                            name="message"
+                            rows="1"
+                            placeholder="Message Nova AI..."
+                            autocomplete="off"
+                        ></textarea>
+
+
+
+                        <!-- SEND -->
+
+                        <button
+                            type="submit"
+                            id="sendButton"
+                            class="send-button"
+                            aria-label="Send message"
+                        >
+
+
+                            <!-- Normal icon -->
+
+                            <svg
+                                class="send-icon"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+
+                                <path
+                                    d="M12 19V5"
+                                ></path>
+
+                                <path
+                                    d="M6 11l6-6 6 6"
+                                ></path>
+
+                            </svg>
+
+
+                            <!-- Loading spinner -->
+
+                            <span class="send-spinner"></span>
+
+
+                        </button>
+
+
+                    </div>
+
+
+                    <div
+                        id="uploadStatus"
+                        class="upload-status"
+                        role="status"
+                        aria-live="polite"
+                        hidden
+                    ></div>
+
+
+                    <div class="input-hint">
+
+                        Nova AI can answer questions, search documents
+                        and perform calculations.
+
+                    </div>
+
+
+                </form>
+
+
+            </div>
+
+
+        </section>
+
+
+    </main>
+
+
+</div>
+
+
+
+<!-- =====================================================
+     JAVASCRIPT
+     ===================================================== -->
+
+<script>
+
+
+// =====================================================
+// ELEMENTS
+// =====================================================
+
+const chatForm =
+    document.getElementById("chatForm");
+
+
+const messageInput =
+    document.getElementById("messageInput");
+
+
+const messagesContainer =
+    document.getElementById("messagesContainer");
+
+
+const chatArea =
+    document.getElementById("chatArea");
+
+
+const sendButton =
+    document.getElementById("sendButton");
+
+
+const typingIndicator =
+    document.getElementById("typingIndicator");
+
+
+const welcomeScreen =
+    document.getElementById("welcomeScreen");
+
+
+// =====================================================
+// CURRENT CONVERSATION
+// =====================================================
+
+const currentConversationId =
+    {{ conversation_id|tojson }};
+
+
+// =====================================================
+// ESCAPE HTML
+// =====================================================
+
+function escapeHTML(text) {
+
+    const div =
+        document.createElement("div");
+
+    div.textContent = text;
+
+    return div.innerHTML;
+}
+
+
+// =====================================================
+// INLINE MARKDOWN
+// =====================================================
+
+function inlineMarkdown(text) {
+
+    text = escapeHTML(text);
+
+
+    text = text.replace(
+        /`([^`]+)`/g,
+        "<code>$1</code>"
+    );
+
+
+    text = text.replace(
+        /\*\*(.*?)\*\*/g,
+        "<strong>$1</strong>"
+    );
+
+
+    text = text.replace(
+        /(?<!\*)\*([^*]+)\*(?!\*)/g,
+        "<em>$1</em>"
+    );
+
+
+    text = text.replace(
+        /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+        '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
+    );
+
+
+    return text;
+}
+
+
+// =====================================================
+// MARKDOWN RENDERER
+// =====================================================
+
+function renderMarkdown(text) {
+
+    const lines =
+        text.split("\n");
+
+    let html = "";
+
+    let inCodeBlock = false;
+
+    let codeContent = "";
+
+    let inUnorderedList = false;
+
+    let inOrderedList = false;
+
+
+    for (let line of lines) {
+
+
+        // CODE BLOCK
+
+        if (line.trim().startsWith("```")) {
+
+
+            if (!inCodeBlock) {
+
+
+                if (inUnorderedList) {
+
+                    html += "</ul>";
+
+                    inUnorderedList = false;
+                }
+
+
+                if (inOrderedList) {
+
+                    html += "</ol>";
+
+                    inOrderedList = false;
+                }
+
+
+                inCodeBlock = true;
+
+                codeContent = "";
+
+
+            } else {
+
+
+                html += `
+                    <pre>
+                        <code>${escapeHTML(codeContent)}</code>
+                    </pre>
+                `;
+
+
+                inCodeBlock = false;
+            }
+
+
+            continue;
+        }
+
+
+        if (inCodeBlock) {
+
+            codeContent += line + "\n";
+
+            continue;
+        }
+
+
+        // EMPTY LINE
+
+        if (line.trim() === "") {
+
+
+            if (inUnorderedList) {
+
+                html += "</ul>";
+
+                inUnorderedList = false;
+            }
+
+
+            if (inOrderedList) {
+
+                html += "</ol>";
+
+                inOrderedList = false;
+            }
+
+
+            html += "<br>";
+
+            continue;
+        }
+
+
+        // HEADINGS
+
+        if (line.startsWith("### ")) {
+
+            html += `
+                <h3>
+                    ${inlineMarkdown(line.substring(4))}
+                </h3>
+            `;
+
+            continue;
+        }
+
+
+        if (line.startsWith("## ")) {
+
+            html += `
+                <h2>
+                    ${inlineMarkdown(line.substring(3))}
+                </h2>
+            `;
+
+            continue;
+        }
+
+
+        if (line.startsWith("# ")) {
+
+            html += `
+                <h1>
+                    ${inlineMarkdown(line.substring(2))}
+                </h1>
+            `;
+
+            continue;
+        }
+
+
+        // UNORDERED LIST
+
+        if (line.match(/^\s*[-*]\s+/)) {
+
+
+            if (!inUnorderedList) {
+
+
+                if (inOrderedList) {
+
+                    html += "</ol>";
+
+                    inOrderedList = false;
+                }
+
+
+                html += "<ul>";
+
+                inUnorderedList = true;
+            }
+
+
+            html += `
+                <li>
+                    ${inlineMarkdown(
+                        line.replace(
+                            /^\s*[-*]\s+/,
+                            ""
+                        )
+                    )}
+                </li>
+            `;
+
+            continue;
+        }
+
+
+        // ORDERED LIST
+
+        if (line.match(/^\s*\d+\.\s+/)) {
+
+
+            if (!inOrderedList) {
+
+
+                if (inUnorderedList) {
+
+                    html += "</ul>";
+
+                    inUnorderedList = false;
+                }
+
+
+                html += "<ol>";
+
+                inOrderedList = true;
+            }
+
+
+            html += `
+                <li>
+                    ${inlineMarkdown(
+                        line.replace(
+                            /^\s*\d+\.\s+/,
+                            ""
+                        )
+                    )}
+                </li>
+            `;
+
+            continue;
+        }
+
+
+        // NORMAL TEXT
+
+        html += `
+            <p>
+                ${inlineMarkdown(line)}
+            </p>
+        `;
+    }
+
+
+    if (inUnorderedList) {
+
+        html += "</ul>";
+    }
+
+
+    if (inOrderedList) {
+
+        html += "</ol>";
+    }
+
+
+    return html;
+}
+
+
+// =====================================================
+// REMOVE WELCOME
+// =====================================================
+
+function removeWelcomeScreen() {
+
+    if (welcomeScreen) {
+
+        welcomeScreen.remove();
+    }
+}
+
+
+// =====================================================
+// ADD USER MESSAGE
+// =====================================================
+
+function addUserMessage(message) {
+
+
+    removeWelcomeScreen();
+
+
+    const row =
+        document.createElement("div");
+
+
+    row.className =
+        "message-row user-row";
+
+
+    row.innerHTML = `
+
+        <div class="message-content">
+
+            <div class="message-meta">
+
+                <span class="message-name">
+                    You
+                </span>
+
+                <span class="message-time">
+                    Just now
+                </span>
+
+            </div>
+
+
+            <div class="message-bubble user-bubble">
+
+                ${escapeHTML(message)}
+
+            </div>
+
+        </div>
+
+
+        <div class="user-avatar">
+
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+            >
+
+                <circle
+                    cx="12"
+                    cy="8"
+                    r="3"
+                ></circle>
+
+                <path
+                    d="M5 20a7 7 0 0 1 14 0"
+                ></path>
+
+            </svg>
+
+        </div>
+    `;
+
+
+    messagesContainer.insertBefore(
+        row,
+        typingIndicator
+    );
+
+
+    scrollToBottom();
+}
+
+
+// =====================================================
+// ADD ASSISTANT MESSAGE
+// =====================================================
+
+function addAssistantMessage(message) {
+
+
+    const row =
+        document.createElement("div");
+
+
+    row.className =
+        "message-row assistant-row";
+
+
+    row.innerHTML = `
+
+        <div class="assistant-avatar">
+
+            <div class="mini-nova">
+
+                <span></span>
+                <span></span>
+                <span></span>
+
+            </div>
+
+        </div>
+
+
+        <div class="message-content">
+
+            <div class="message-meta">
+
+                <span class="message-name">
+                    Nova AI
+                </span>
+
+                <span class="message-time">
+                    Just now
+                </span>
+
+            </div>
+
+
+            <div class="message-bubble assistant-bubble">
+
+                <div class="markdown-content">
+
+                    ${renderMarkdown(message)}
+
+                </div>
+
+
+                <button
+                    class="copy-message"
+                    type="button"
+                    onclick="copyMessage(this)"
+                >
+                    Copy
+                </button>
+
+            </div>
+
+        </div>
+    `;
+
+
+    messagesContainer.insertBefore(
+        row,
+        typingIndicator
+    );
+
+
+    scrollToBottom();
+}
+
+
+function updateCurrentConversationTitle(message) {
+    const titleElement = document.querySelector(
+        ".conversation-item.active .conversation-title"
+    );
+
+    if (!titleElement || titleElement.textContent.trim() !== "New Conversation") {
+        return;
+    }
+
+    let title = message.trim().replace(/\s+/g, " ");
+
+    if (title.length > 48) {
+        title = title.slice(0, 45).trimEnd() + "...";
+    }
+
+    titleElement.textContent = title || "New Conversation";
+}
+
+
+// =====================================================
+// ERROR
+// =====================================================
+
+function addErrorMessage(message) {
+
+
+    const row =
+        document.createElement("div");
+
+
+    row.className =
+        "message-row assistant-row";
+
+
+    row.innerHTML = `
+
+        <div class="assistant-avatar">
+
+            <div class="mini-nova">
+
+                <span></span>
+                <span></span>
+                <span></span>
+
+            </div>
+
+        </div>
+
+
+        <div class="message-content">
+
+            <div class="message-meta">
+
+                <span class="message-name">
+                    Nova AI
+                </span>
+
+            </div>
+
+
+            <div class="error-card">
+
+                <strong>
+                    Something went wrong
+                </strong>
+
+                <p>
+                    ${escapeHTML(message)}
+                </p>
+
+            </div>
+
+        </div>
+    `;
+
+
+    messagesContainer.insertBefore(
+        row,
+        typingIndicator
+    );
+
+
+    scrollToBottom();
+}
+
+
+// =====================================================
+// TYPING INDICATOR
+// =====================================================
+
+function showTyping() {
+
+
+    if (!typingIndicator) {
+        return;
+    }
+
+
+    typingIndicator.style.display =
+        "flex";
+
+
+    scrollToBottom();
+}
+
+
+function hideTyping() {
+
+
+    if (!typingIndicator) {
+        return;
+    }
+
+
+    typingIndicator.style.display =
+        "none";
+}
+
+
+// =====================================================
+// SCROLL
+// =====================================================
+
+function scrollToBottom() {
+
+
+    if (!chatArea) {
+        return;
+    }
+
+
+    chatArea.scrollTo({
+
+        top:
+            chatArea.scrollHeight,
+
+        behavior:
+            "smooth"
+
+    });
+}
+
+
+// =====================================================
+// LOADING STATE
+// =====================================================
+
+function setLoading(loading) {
+
+
+    if (!sendButton) {
+        return;
+    }
+
+
+    sendButton.disabled =
+        loading;
+
+
+    const sendIcon =
+        sendButton.querySelector(
+            ".send-icon"
+        );
+
+
+    const spinner =
+        sendButton.querySelector(
+            ".send-spinner"
+        );
+
+
+    if (loading) {
+
+
+        sendButton.classList.add(
+            "loading"
+        );
+
+
+        if (sendIcon) {
+
+            sendIcon.style.display =
+                "none";
+        }
+
+
+        if (spinner) {
+
+            spinner.style.display =
+                "block";
+        }
+
+
+    } else {
+
+
+        sendButton.classList.remove(
+            "loading"
+        );
+
+
+        if (sendIcon) {
+
+            sendIcon.style.display =
+                "block";
+        }
+
+
+        if (spinner) {
+
+            spinner.style.display =
+                "none";
+        }
+    }
+}
+
+
+// =====================================================
+// SEND MESSAGE
+// =====================================================
+
+async function sendMessage() {
+
+
+    if (!messageInput || !messagesContainer || !typingIndicator) {
+        console.error("Chat UI is missing a required element.");
+        return;
+    }
+
+
+    const message =
+        messageInput.value.trim();
+
+
+    if (!message) {
+        return;
+    }
+
+
+    if (
+        sendButton &&
+        sendButton.disabled
+    ) {
+        return;
+    }
+
+
+    // Clear input
+
+    messageInput.value = "";
+
+    messageInput.style.height =
+        "auto";
+
+
+    // Show user message
+
+    addUserMessage(message);
+
+
+    // Loading
+
+    setLoading(true);
+
+    showTyping();
+
+
+    try {
+
+
+        const response =
+            await fetch(
+                "/api/chat",
+                {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        conversation_id:
+                            currentConversationId,
+
+                        message:
+                            message
+
+                    })
+
+                }
+            );
+
+
+        let data;
+
+        try {
+            data = await response.json();
+        } catch (parseError) {
+            throw new Error(
+                `The server returned an unreadable response (HTTP ${response.status}).`
+            );
+        }
+
+
+        hideTyping();
+
+
+        if (
+            !response.ok ||
+            !data.success
+        ) {
+
+
+            addErrorMessage(
+                data.error ||
+                `The request failed (HTTP ${response.status}). Please try again.`
+            );
+
+
+            return;
+        }
+
+
+        addAssistantMessage(
+            data.assistant_response ||
+            "I received an empty response. Please try again."
+        );
+
+        if (data.task_id) {
+            loadSavedActionPlans();
+        }
+
+        updateCurrentConversationTitle(message);
+
+
+    } catch (error) {
+
+
+        console.error(
+            "Chat error:",
+            error
+        );
+
+
+        hideTyping();
+
+
+        addErrorMessage(
+            error.message ||
+            "Unable to connect to the assistant. Please make sure Flask and FastAPI are running."
+        );
+
+
+    } finally {
+
+
+        setLoading(false);
+
+
+        messageInput.focus();
+    }
+}
+
+
+// =====================================================
+// FORM
+// =====================================================
+
+if (chatForm) {
+
+
+    chatForm.addEventListener(
+        "submit",
+        function(event) {
+
+            event.preventDefault();
+
+            sendMessage();
+
+        }
+    );
+}
+
+
+// =====================================================
+// ENTER TO SEND
+// SHIFT + ENTER = NEW LINE
+// =====================================================
+
+if (messageInput) {
+
+
+    messageInput.addEventListener(
+        "keydown",
+        function(event) {
+
+
+            if (
+                event.key === "Enter" &&
+                !event.shiftKey
+            ) {
+
+
+                event.preventDefault();
+
+                sendMessage();
+
+            }
+
+        }
+    );
+
+
+    // Auto resize
+
+    messageInput.addEventListener(
+        "input",
+        function() {
+
+
+            this.style.height =
+                "auto";
+
+
+            this.style.height =
+                Math.min(
+                    this.scrollHeight,
+                    150
+                ) + "px";
+
+        }
+    );
+}
+
+
+// =====================================================
+// COPY
+// =====================================================
+
+function copyMessage(button) {
+
+
+    const bubble =
+        button.closest(
+            ".message-bubble"
+        );
+
+
+    if (!bubble) {
+        return;
+    }
+
+
+    const content =
+        bubble.querySelector(
+            ".markdown-content"
+        );
+
+
+    if (!content) {
+        return;
+    }
+
+
+    navigator.clipboard
+        .writeText(
+            content.innerText
+        )
+        .then(() => {
+
+
+            const oldText =
+                button.innerText;
+
+
+            button.innerText =
+                "Copied!";
+
+
+            setTimeout(
+                function() {
+
+                    button.innerText =
+                        oldText;
+
+                },
+                1200
+            );
+
+        });
+}
+
+
+// =====================================================
+// SUGGESTION CARDS
+// =====================================================
+
+document
+    .querySelectorAll(".suggestion")
+    .forEach(
+        function(card) {
+
+
+            card.addEventListener(
+                "click",
+                function() {
+
+
+                    const text =
+                        this.dataset.message;
+
+
+                    messageInput.value =
+                        text;
+
+
+                    messageInput.focus();
+
+
+                    messageInput.dispatchEvent(
+                        new Event("input")
+                    );
+
+                }
+            );
+
+        }
+    );
+
+
+// =====================================================
+// DOCUMENT UPLOAD
+// =====================================================
+
+const attachmentButton =
+    document.querySelector(".attachment-button");
+
+const documentInput =
+    document.getElementById("documentInput");
+
+const uploadStatus =
+    document.getElementById("uploadStatus");
+
+const taskPlanToggle = document.getElementById("taskPlanToggle");
+const taskPlanList = document.getElementById("taskPlanList");
+const taskPlanCount = document.getElementById("taskPlanCount");
+const documentToggle = document.getElementById("documentToggle");
+const documentList = document.getElementById("documentList");
+const documentCount = document.getElementById("documentCount");
+
+async function loadDocuments() {
+    if (!documentToggle || !documentList) {
+        return;
+    }
+    try {
+        const response = await fetch("/api/documents");
+        const payload = await response.json();
+        if (!response.ok || !payload.success) {
+            throw new Error(payload.error || "Could not load PDFs.");
+        }
+
+        const documents = payload.documents || [];
+        documentCount.textContent = String(documents.length);
+        documentList.replaceChildren();
+        if (!documents.length) {
+            const empty = document.createElement("p");
+            empty.className = "task-plan-empty";
+            empty.textContent = "No uploaded PDFs yet.";
+            documentList.appendChild(empty);
+            return;
+        }
+
+        documents.forEach(documentRecord => {
+            const row = document.createElement("div");
+            row.className = "uploaded-document-row";
+            const name = document.createElement("span");
+            name.className = "uploaded-document-name";
+            name.textContent = documentRecord.filename;
+            const remove = document.createElement("button");
+            remove.type = "button";
+            remove.className = "delete-document-button";
+            remove.textContent = "×";
+            remove.title = `Delete ${documentRecord.filename}`;
+            remove.setAttribute("aria-label", `Delete ${documentRecord.filename}`);
+            remove.addEventListener("click", async function() {
+                if (!window.confirm(`Delete “${documentRecord.filename}” and remove it from PDF search?`)) {
+                    return;
+                }
+                remove.disabled = true;
+                try {
+                    const deletion = await fetch(
+                        `/api/documents/${documentRecord.document_id}`,
+                        { method: "DELETE" }
+                    );
+                    const result = await deletion.json();
+                    if (!deletion.ok || !result.success) {
+                        throw new Error(result.error || "Could not delete this PDF.");
+                    }
+                    await loadDocuments();
+                    setUploadStatus(`${documentRecord.filename} was deleted from PDF search.`);
+                } catch (error) {
+                    setUploadStatus(error.message || "Could not delete this PDF.", true);
+                    remove.disabled = false;
+                }
+            });
+            row.append(name, remove);
+            documentList.appendChild(row);
+        });
+    } catch (error) {
+        documentCount.textContent = "!";
+        documentList.replaceChildren();
+        const message = document.createElement("p");
+        message.className = "task-plan-empty";
+        message.textContent = "PDF list is temporarily unavailable.";
+        documentList.appendChild(message);
+    }
+}
+
+if (documentToggle && documentList) {
+    documentToggle.addEventListener("click", function() {
+        const willOpen = documentList.hidden;
+        documentList.hidden = !willOpen;
+        documentToggle.setAttribute("aria-expanded", String(willOpen));
+        if (willOpen) {
+            loadDocuments();
+        }
+    });
+}
+
+async function loadSavedActionPlans() {
+    if (!taskPlanToggle || !taskPlanList) {
+        return;
+    }
+    try {
+        const response = await fetch("/api/tasks");
+        const payload = await response.json();
+        if (!response.ok || !payload.success) {
+            throw new Error(payload.error || "Could not load action plans.");
+        }
+
+        const tasks = payload.tasks || [];
+        taskPlanCount.textContent = String(tasks.length);
+        taskPlanList.replaceChildren();
+        if (!tasks.length) {
+            const empty = document.createElement("p");
+            empty.className = "task-plan-empty";
+            empty.textContent = "Your document action plans will appear here.";
+            taskPlanList.appendChild(empty);
+            return;
+        }
+
+        tasks.forEach(task => {
+            const details = document.createElement("details");
+            details.className = "saved-task-plan";
+            const summary = document.createElement("summary");
+            summary.textContent = task.task_input || "Document action plan";
+            const result = document.createElement("div");
+            result.className = "saved-task-result";
+            result.textContent = task.result || "No checklist was saved.";
+            details.append(summary, result);
+            taskPlanList.appendChild(details);
+        });
+    } catch (error) {
+        taskPlanCount.textContent = "!";
+        taskPlanList.replaceChildren();
+        const message = document.createElement("p");
+        message.className = "task-plan-empty";
+        message.textContent = "Saved action plans are temporarily unavailable.";
+        taskPlanList.appendChild(message);
+    }
+}
+
+if (taskPlanToggle && taskPlanList) {
+    taskPlanToggle.addEventListener("click", function() {
+        const willOpen = taskPlanList.hidden;
+        taskPlanList.hidden = !willOpen;
+        taskPlanToggle.setAttribute("aria-expanded", String(willOpen));
+        if (willOpen) {
+            loadSavedActionPlans();
+        }
+    });
+}
+
+function setUploadStatus(message, isError = false) {
+    if (!uploadStatus) {
+        return;
+    }
+
+    uploadStatus.textContent = message;
+    uploadStatus.classList.toggle("is-error", isError);
+    uploadStatus.hidden = !message;
+}
+
+if (attachmentButton && documentInput) {
+    attachmentButton.addEventListener("click", function() {
+        documentInput.click();
+    });
+
+    documentInput.addEventListener("change", async function() {
+        const files = Array.from(documentInput.files || []);
+
+        if (!files.length) {
+            return;
+        }
+
+        if (files.length > 5) {
+            setUploadStatus("Choose at most 5 PDFs at a time.", true);
+            documentInput.value = "";
+            return;
+        }
+
+        const invalidFile = files.find(
+            file => !file.name.toLowerCase().endsWith(".pdf")
+        );
+        if (invalidFile) {
+            setUploadStatus("Please choose PDF files only.", true);
+            documentInput.value = "";
+            return;
+        }
+
+        const formData = new FormData();
+        files.forEach(file => formData.append("files", file));
+        attachmentButton.disabled = true;
+        setUploadStatus(
+            files.length === 1
+                ? `Indexing ${files[0].name}…`
+                : `Indexing ${files.length} PDFs together…`
+        );
+
+        try {
+            const response = await fetch("/api/documents", {
+                method: "POST",
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                throw new Error(result.error || "The PDF could not be indexed.");
+            }
+
+            const names = (result.documents || [])
+                .map(document => document.filename)
+                .join(", ");
+            setUploadStatus(
+                `${result.files_processed} PDF${result.files_processed === 1 ? "" : "s"} indexed${names ? `: ${names}` : ""}. Original PDFs are not kept on this device.`
+            );
+            loadDocuments();
+        } catch (error) {
+            setUploadStatus(
+                error.message || "The PDF could not be uploaded.",
+                true
+            );
+        } finally {
+            attachmentButton.disabled = false;
+            documentInput.value = "";
+        }
+    });
+}
+
+
+// =====================================================
+// MOBILE SIDEBAR
+// =====================================================
+
+const sidebar =
+    document.querySelector(
+        ".sidebar"
+    );
+
+
+const mobileMenu =
+    document.querySelector(
+        ".mobile-menu"
+    );
+
+
+const mobileClose =
+    document.querySelector(
+        ".mobile-close"
+    );
+
+
+if (mobileMenu) {
+
+
+    mobileMenu.addEventListener(
+        "click",
+        function() {
+
+
+            sidebar.classList.add(
+                "mobile-open"
+            );
+
+        }
+    );
+}
+
+
+if (mobileClose) {
+
+
+    mobileClose.addEventListener(
+        "click",
+        function() {
+
+
+            sidebar.classList.remove(
+                "mobile-open"
+            );
+
+        }
+    );
+}
+
+
+// =====================================================
+// INITIAL
+// =====================================================
+
+if (messageInput) {
+
+    messageInput.focus();
+
+}
+
+loadDocuments();
+
+document.querySelectorAll(".delete-conversation-button").forEach(button => {
+    button.addEventListener("click", async function() {
+        const conversationId = button.dataset.conversationId;
+        const title = button.dataset.conversationTitle || "this conversation";
+        if (!window.confirm(`Delete “${title}” and its messages?`)) {
+            return;
+        }
+        button.disabled = true;
+        try {
+            const response = await fetch(
+                `/api/conversations/${conversationId}`,
+                { method: "DELETE" }
+            );
+            const result = await response.json();
+            if (!response.ok || !result.success) {
+                throw new Error(result.error || "Could not delete this conversation.");
+            }
+            window.location.reload();
+        } catch (error) {
+            window.alert(error.message || "Could not delete this conversation.");
+            button.disabled = false;
+        }
+    });
+});
+
+
+</script>
+
+
+</body>
+
+</html>
